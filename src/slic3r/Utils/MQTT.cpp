@@ -54,9 +54,10 @@ MqttClient::MqttClient(const std::string& server_address,
                       bool clean_session)
     : MqttClient(server_address, client_id, username, password, clean_session)
 {
+    // Never log credentials or certificate material.
     BOOST_LOG_TRIVIAL(info) << "[MQTT_INFO] 初始化MQTT SSL连接 server_address: " << server_address << ", client_id: " << client_id
-                            << ", ca_content: " << ca_content << ", cert_content: " << cert_content << ", username: " << username
-                            << ", password: " << password;
+                            << ", ca provided: " << (!ca_content.empty()) << ", client cert provided: " << (!cert_content.empty())
+                            << ", username provided: " << (!username.empty());
     
     try {
         // 创建临时文件
@@ -106,7 +107,10 @@ MqttClient::MqttClient(const std::string& server_address,
         
         // 设置SSL验证选项
         ssl_opts.set_verify(false);
-        ssl_opts.set_enable_server_cert_auth(true);
+        // Without a CA there is nothing to authenticate the server against;
+        // printers with self-signed certificates (e.g. Anycubic LAN mode)
+        // connect with an empty trust store.
+        ssl_opts.set_enable_server_cert_auth(!ca_content.empty());
         
         // 设置证书文件路径
         if (!ca_content.empty()) {

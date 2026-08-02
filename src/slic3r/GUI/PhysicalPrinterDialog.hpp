@@ -1,6 +1,7 @@
 #ifndef slic3r_PhysicalPrinterDialog_hpp_
 #define slic3r_PhysicalPrinterDialog_hpp_
 
+#include <memory>
 #include <vector>
 
 #include <wx/gdicmn.h>
@@ -43,6 +44,10 @@ class PhysicalPrinterDialog : public DPIDialog
 
     void build_printhost_settings(ConfigOptionsGroup* optgroup);
     void OnOK(wxEvent& event);
+
+    // Set to false in the destructor; lets the async "Test connection" worker
+    // detect that the dialog is gone before touching any widget.
+    std::shared_ptr<bool> m_alive { std::make_shared<bool>(true) };
 
 public:
     PhysicalPrinterDialog(wxWindow* parent);

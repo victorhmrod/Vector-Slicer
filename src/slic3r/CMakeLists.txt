@@ -549,6 +549,10 @@ set(SLIC3R_GUI_SOURCES
     Utils/FlashAir.hpp
     Utils/Flashforge.cpp
     Utils/Flashforge.hpp
+    Utils/FlashforgeLan.cpp
+    Utils/FlashforgeLan.hpp
+    Utils/AnycubicLan.cpp
+    Utils/AnycubicLan.hpp
     Utils/FontConfigHelp.cpp
     Utils/FontConfigHelp.hpp
     Utils/HexFile.cpp

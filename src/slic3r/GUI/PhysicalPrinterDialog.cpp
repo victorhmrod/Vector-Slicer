@@ -3,6 +3,7 @@
 #include "PrinterCloudAuthDialog.hpp"
 
 #include <cstddef>
+#include <thread>
 #include <vector>
 #include <string>
 #include <boost/algorithm/string.hpp>
@@ -118,6 +119,7 @@ PhysicalPrinterDialog::PhysicalPrinterDialog(wxWindow* parent) :
 
 PhysicalPrinterDialog::~PhysicalPrinterDialog()
 {
+    *m_alive = false;
 }
 
 void PhysicalPrinterDialog::build_printhost_settings(ConfigOptionsGroup* m_optgroup)
@@ -166,6 +168,33 @@ void PhysicalPrinterDialog::build_printhost_settings(ConfigOptionsGroup* m_optgr
             if (!host) {
                 const wxString text = _L("Could not get a valid Printer Host reference");
                 show_error(this, text);
+                return;
+            }
+
+            if (!host->is_cloud()) {
+                // Run the connection test in a worker thread so the dialog stays
+                // responsive; network timeouts can take several seconds.
+                m_printhost_test_btn->Enable(false);
+                m_printhost_test_btn->SetLabel(_L("Testing"));
+                PrintHost* raw_host = host.release();
+                std::shared_ptr<bool> alive = m_alive;
+                std::thread([this, raw_host, alive]() {
+                    std::unique_ptr<PrintHost> host(raw_host);
+                    wxString msg;
+                    const bool     result   = host->test(msg);
+                    const wxString ok_msg   = host->get_test_ok_msg();
+                    const wxString fail_msg = host->get_test_failed_msg(msg);
+                    wxGetApp().CallAfter([this, alive, result, ok_msg, fail_msg]() {
+                        if (!*alive)
+                            return;
+                        m_printhost_test_btn->SetLabel(_L("Test"));
+                        if (result)
+                            show_info(this, ok_msg, _L("Success!"));
+                        else
+                            show_error(this, fail_msg);
+                        update();
+                    });
+                }).detach();
                 return;
             }
 
@@ -632,6 +661,23 @@ void PhysicalPrinterDialog::update(bool printer_change)
                 m_optgroup->hide_field("printhost_apikey");
                 m_optgroup->hide_field("printhost_authorization_type");
             }
+
+        if (opt->value == htFlashforgeLan) {
+            // "printhost_apikey" holds the LAN-mode CheckCode shown on the
+            // printer screen; "printhost_user" optionally holds the serial
+            // number (auto-discovered over TCP 8899 when left empty).
+            m_optgroup->hide_field("printhost_authorization_type");
+            m_optgroup->show_field("printhost_apikey", true);
+            m_optgroup->show_field("printhost_user", true);
+            m_optgroup->hide_field("printhost_password");
+            m_optgroup->hide_field("print_host_webui");
+        } else if (opt->value == htAnycubicLan) {
+            // Credentials are derived by the LAN-mode handshake; only the
+            // printer IP is required.
+            m_optgroup->hide_field("printhost_authorization_type");
+            m_optgroup->hide_field("printhost_apikey");
+            m_optgroup->hide_field("print_host_webui");
+        }
     }
     else {
         m_optgroup->set_value("host_type", int(PrintHostType::htOctoPrint), false);
@@ -674,17 +720,24 @@ void PhysicalPrinterDialog::update_host_type(bool printer_change)
 
     Choice* choice = dynamic_cast<Choice*>(ht);
     choice->set_values(types);
-    int index_in_choice = (printer_change ? std::clamp(last_in_conf - ((int)ht->m_opt.enum_values.size() - (int)types.size()), 0, (int)ht->m_opt.enum_values.size() - 1) : last_in_conf);
-    choice->set_value(index_in_choice);
-    if ("prusalink" == ht->m_opt.enum_values.at(index_in_choice))
-        m_config->set_key_value("host_type", new ConfigOptionEnum<PrintHostType>(htPrusaLink));
-    else if ("prusaconnect" == ht->m_opt.enum_values.at(index_in_choice))
-        m_config->set_key_value("host_type", new ConfigOptionEnum<PrintHostType>(htPrusaConnect));
-    else {
-        int host_type = std::clamp(index_in_choice + ((int)ht->m_opt.enum_values.size() - (int)types.size()), 0, (int)ht->m_opt.enum_values.size() - 1);
-        PrintHostType type = static_cast<PrintHostType>(host_type);
-        m_config->set_key_value("host_type", new ConfigOptionEnum<PrintHostType>(type));
+    // Map the stored enum value to its position in the choice list through the
+    // enum key names. The list order used to mirror the raw enum values, but
+    // that no longer holds (e.g. the Moonraker values sit between the last
+    // upstream entry and the FullSpectrum LAN backends).
+    const t_config_enum_names&  enum_names = ConfigOptionEnum<PrintHostType>::get_enum_names();
+    const t_config_enum_values& enum_keys  = ConfigOptionEnum<PrintHostType>::get_enum_values();
+    int index_in_choice = 0;
+    if (last_in_conf >= 0 && last_in_conf < (int)enum_names.size()) {
+        const std::string& conf_key = enum_names[last_in_conf];
+        const auto it = std::find(ht->m_opt.enum_values.begin(), ht->m_opt.enum_values.end(), conf_key);
+        if (it != ht->m_opt.enum_values.end())
+            index_in_choice = int(it - ht->m_opt.enum_values.begin());
     }
+    choice->set_value(index_in_choice);
+    const std::string& selected_key = ht->m_opt.enum_values.at(size_t(index_in_choice));
+    const auto key_it = enum_keys.find(selected_key);
+    const PrintHostType type = key_it != enum_keys.end() ? static_cast<PrintHostType>(key_it->second) : htOctoPrint;
+    m_config->set_key_value("host_type", new ConfigOptionEnum<PrintHostType>(type));
 }
 
 void PhysicalPrinterDialog::update_printers()

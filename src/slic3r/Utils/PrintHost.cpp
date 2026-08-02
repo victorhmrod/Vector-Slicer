@@ -26,6 +26,8 @@
 #include "../GUI/MainFrame.hpp"
 #include "Obico.hpp"
 #include "Flashforge.hpp"
+#include "FlashforgeLan.hpp"
+#include "AnycubicLan.hpp"
 #include "SimplyPrint.hpp"
 #include "ElegooLink.hpp"
 
@@ -68,6 +70,8 @@ PrintHost* PrintHost::get_print_host(DynamicPrintConfig *config, bool change_eng
             case htCrealityPrint:    return new CrealityPrint(config);
             case htObico:     return new Obico(config);
             case htFlashforge: return new Flashforge(config);
+            case htFlashforgeLan: return new FlashforgeLan(config);
+            case htAnycubicLan: return new AnycubicLan(config);
             case htSimplyPrint: return new SimplyPrint(config);
             case htElegooLink: return new ElegooLink(config);
             default:          return nullptr;
