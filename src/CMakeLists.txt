@@ -11,6 +11,7 @@ add_subdirectory(dev-utils)
 
 # Add MQTT library
 add_subdirectory(mqtt)
+add_subdirectory(VectorSmartFilament)
 
 # Set MQTT paths for use in slic3r GUI
 set(PAHO_MQTT_CPP_PATH "${CMAKE_CURRENT_SOURCE_DIR}/mqtt" CACHE PATH "Paho MQTT C++ path")
