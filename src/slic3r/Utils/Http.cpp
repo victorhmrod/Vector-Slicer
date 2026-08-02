@@ -117,6 +117,10 @@ struct Http::priv
 	// Using a deque here because unlike vector it doesn't ivalidate pointers on insertion
 	std::deque<form_file> form_files;
 	std::string postfields;
+	// Whether a request body was set explicitly. An explicitly empty body still
+	// has to reach curl as POSTFIELDS, otherwise curl falls back to the read
+	// callback (CURLOPT_READFUNCTION is always installed) with no read data.
+	bool postfields_set = false;
 	std::string error_buffer;    // Used for CURLOPT_ERRORBUFFER
     std::string headers;
 	size_t limit;
@@ -395,11 +399,13 @@ void Http::priv::set_post_body(const fs::path &path)
 	std::ifstream file(path.string());
 	std::string file_content { std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>() };
 	postfields = std::move(file_content);
+	postfields_set = true;
 }
 
 void Http::priv::set_post_body(const std::string &body)
 {
 	postfields = body;
+	postfields_set = true;
 }
 
 void Http::priv::set_put_body(const fs::path &path)
@@ -417,6 +423,7 @@ void Http::priv::set_put_body(const fs::path &path)
 void Http::priv::set_del_body(const std::string& body)
 {
 	postfields = body;
+	postfields_set = true;
 }
 
 void Http::priv::set_range(const std::string& range)
@@ -475,7 +482,7 @@ void Http::priv::http_perform()
 		::curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
 	}
 
-	if (!postfields.empty()) {
+	if (postfields_set || !postfields.empty()) {
 		::curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postfields.c_str());
 		::curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE, postfields.size());
 	}

@@ -1,7 +1,7 @@
 // Tests for the multivendor LAN print hosts (FlashForge AD5M / Anycubic Kobra 3).
 // Everything runs against local mock servers - no printer is ever contacted.
 
-#include <catch_main.hpp>
+#include <catch2/catch.hpp>
 
 #include <atomic>
 #include <cstring>
@@ -123,6 +123,15 @@ DynamicPrintConfig make_host_config(const std::string &host_type_key, const std:
     config.set_key_value("printhost_user", new ConfigOptionString(user));
     config.set_key_value("printer_technology", new ConfigOptionEnum<PrinterTechnology>(ptFFF));
     config.set_key_value("gcode_flavor", new ConfigOptionEnum<GCodeFlavor>(gcfKlipper));
+    // Every backend constructor reads its own subset of these; a missing key
+    // would dereference a null option, so provide the whole print-host set.
+    config.set_key_value("printhost_cafile", new ConfigOptionString());
+    config.set_key_value("printhost_password", new ConfigOptionString());
+    config.set_key_value("printhost_port", new ConfigOptionString());
+    config.set_key_value("print_host_webui", new ConfigOptionString());
+    config.set_key_value("printhost_ssl_ignore_revoke", new ConfigOptionBool(false));
+    config.set_key_value("printhost_authorization_type", new ConfigOptionEnum<AuthorizationType>(atKeyPassword));
+    config.set_key_value("bbl_use_printhost", new ConfigOptionBool(false));
     return config;
 }
 

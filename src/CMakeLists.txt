@@ -49,6 +49,12 @@ if (SLIC3R_GUI)
 
     include(${wxWidgets_USE_FILE})
 
+    # include(${wxWidgets_USE_FILE}) only affects this directory tree. Export the
+    # include dirs/definitions so sibling subdirectories (tests/) can compile
+    # sources that pull in wx headers through libslic3r_gui.
+    set(ORCA_WXWIDGETS_INCLUDE_DIRS "${wxWidgets_INCLUDE_DIRS}" CACHE INTERNAL "wxWidgets include dirs")
+    set(ORCA_WXWIDGETS_DEFINITIONS "${wxWidgets_DEFINITIONS}" CACHE INTERNAL "wxWidgets compile definitions")
+
     find_package(JPEG QUIET)
 
     string(REGEX MATCH "wxpng" WX_PNG_BUILTIN ${wxWidgets_LIBRARIES})
