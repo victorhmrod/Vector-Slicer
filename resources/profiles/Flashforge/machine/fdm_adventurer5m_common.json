@@ -5,6 +5,7 @@
     "from": "system",
     "instantiation": "false",
     "gcode_flavor": "klipper",
+    "host_type": "flashforge_lan",
     "printable_area": [
         "-110x-110",
         "110x-110",
