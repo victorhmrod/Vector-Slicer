@@ -29,6 +29,18 @@ enum class PrintHostPostUploadAction {
 using PrintHostPostUploadActions = enum_bitmask<PrintHostPostUploadAction>;
 ENABLE_ENUM_BITMASK_OPERATORS(PrintHostPostUploadAction);
 
+// Coarse feature flags a host implementation supports. Used by the GUI to
+// avoid exposing controls a given backend cannot honour.
+struct PrintHostCapabilities
+{
+    bool can_upload        { true };
+    bool can_start_print   { false };
+    bool can_query_status  { false };
+    bool can_pause         { false };
+    bool can_cancel        { false };
+    bool can_access_camera { false };
+};
+
 struct PrintHostUpload
 {
     bool use_3mf;
@@ -62,6 +74,12 @@ public:
     virtual bool has_auto_discovery() const = 0;
     virtual bool can_test() const = 0;
     virtual PrintHostPostUploadActions get_post_upload_actions() const = 0;
+    virtual PrintHostCapabilities get_capabilities() const
+    {
+        PrintHostCapabilities caps;
+        caps.can_start_print = get_post_upload_actions().has(PrintHostPostUploadAction::StartPrint);
+        return caps;
+    }
     // A print host usually does not support multiple printers, with the exception of Repetier server.
     virtual bool supports_multiple_printers() const { return false; }
     virtual std::string get_host() const = 0;
