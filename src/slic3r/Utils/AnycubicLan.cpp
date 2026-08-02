@@ -215,7 +215,7 @@ bool AnycubicLan::handshake(Identity &identity, wxString &msg) const
     }
 
     const std::string host     = host_only();
-    const std::string info_url = (boost::format("http://%1%:%2%/info") % host % AC_INFO_PORT).str();
+    const std::string info_url = (boost::format("http://%1%:%2%/info") % host % m_info_port).str();
 
     BOOST_LOG_TRIVIAL(info) << AC_LAN_NAME << ": querying printer identity at " << info_url;
 
@@ -255,9 +255,9 @@ bool AnycubicLan::handshake(Identity &identity, wxString &msg) const
         return false;
     }
     if (ctrl_url.empty())
-        ctrl_url = (boost::format("http://%1%:%2%/ctrl") % host % AC_INFO_PORT).str();
+        ctrl_url = (boost::format("http://%1%:%2%/ctrl") % host % m_info_port).str();
     if (identity.file_upload_url.empty())
-        identity.file_upload_url = (boost::format("http://%1%:%2%/gcode_upload") % host % AC_INFO_PORT).str();
+        identity.file_upload_url = (boost::format("http://%1%:%2%/gcode_upload") % host % m_info_port).str();
 
     // Signed credential request.
     const std::string ts    = epoch_ms_string();

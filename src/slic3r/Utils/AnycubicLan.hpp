@@ -61,6 +61,10 @@ public:
     static std::string handshake_sign(const std::string &token, const std::string &ts, const std::string &nonce);
     static bool        aes_cbc_decrypt(const std::string &ciphertext, const std::string &key16, const std::string &iv_source, std::string &plaintext);
 
+    // Test hook: redirect the identity/upload HTTP port (default 18910) to a
+    // local mock server. Never used in production code paths.
+    void set_info_port_for_testing(int port) { m_info_port = port; }
+
     // Result of the /info + /ctrl handshake.
     struct Identity
     {
@@ -75,7 +79,8 @@ public:
     };
 
 private:
-    std::string m_host; // IP or hostname (ports are fixed by the protocol)
+    std::string m_host;          // IP or hostname (ports are fixed by the protocol)
+    int         m_info_port = 18910;
 
     std::string host_only() const;
     bool        handshake(Identity &identity, wxString &msg) const;

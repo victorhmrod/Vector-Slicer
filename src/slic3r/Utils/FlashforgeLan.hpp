@@ -52,6 +52,10 @@ public:
     // storage cannot digest. Kept public (and static) for unit testing.
     static std::string sanitize_remote_filename(const std::string &filename);
 
+    // Parses the {code, message} envelope every HTTP endpoint answers with.
+    // Returns false when the body is not valid JSON. Public for unit testing.
+    static bool parse_code_message(const std::string &body, int &code, std::string &message);
+
 private:
     std::string m_host;        // IP or hostname, optional ":port" (default 8898)
     std::string m_serial;      // printer serial number ("printhost_user")
@@ -64,7 +68,6 @@ private:
     std::string discover_serial(wxString &msg) const;
     // POST /detail and validate the code/message envelope.
     bool query_detail(wxString &msg, std::string *printer_name, std::string *status, std::string &serial_in_use) const;
-    static bool parse_code_message(const std::string &body, int &code, std::string &message);
 };
 
 } // namespace Slic3r
