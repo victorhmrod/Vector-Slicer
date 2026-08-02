@@ -1,7 +1,22 @@
 
-<h1> <p "font-size:200px;"> Snapmaker Orca FullSpectrum</p> </h1>
+<h1> <p "font-size:200px;"> OrcaSlicer FullSpectrum</p> </h1>
 
-### A Snapmaker Orca Fork with Mixed-Color Filament Support
+### A multivendor fork of Snapmaker Orca FullSpectrum — Mixed-Color Filament Support + direct LAN printing
+
+**Version 0.1.0-mvp (experimental).** Besides everything from Snapmaker Orca
+FullSpectrum (mixed-color filaments, Local-Z, tool ordering, prime tower), this
+fork adds direct LAN printing on stock firmware — no cloud account required:
+
+| Printer | Backend | Status |
+|---|---|---|
+| Anycubic Kobra 3 (LAN Mode) | `anycubic_lan` | experimental — protocol implemented from community docs, not yet hardware-validated in this fork |
+| FlashForge Adventurer 5M / 5M Pro | `flashforge_lan` | experimental — protocol implemented from community docs, not yet hardware-validated in this fork |
+| All existing backends (OctoPrint, Moonraker, Duet, MKS, Obico, …) | unchanged | preserved |
+
+See [docs/MVP_MULTIVENDOR.md](docs/MVP_MULTIVENDOR.md) for setup (LAN Mode,
+IP/CheckCode), architecture, security notes and known limitations. This fork
+uses its own configuration directory (`OrcaSlicer_FullSpectrum`) and does not
+touch Snapmaker Orca or OrcaSlicer installs.
 
 [![Build all](https://github.com/Snapmaker/OrcaSlicer/actions/workflows/build_all.yml/badge.svg?branch=main)](https://github.com/Snapmaker/OrcaSlicer/actions/workflows/build_all.yml)
 
@@ -186,6 +201,8 @@ Special thanks to [u/Aceman11100](https://www.reddit.com/user/Aceman11100/) for 
 
 
 # License
+OrcaSlicer FullSpectrum is licensed under the GNU Affero General Public License, version 3. OrcaSlicer FullSpectrum is based on Snapmaker Orca FullSpectrum.
+
 Snapmaker Orca FullSpectrum is licensed under the GNU Affero General Public License, version 3. Snapmaker Orca FullSpectrum is based on Snapmaker Orca.
 
 Snapmaker Orca is licensed under the GNU Affero General Public License, version 3. Snapmaker Orca is based on Orca Slicer by SoftFever.

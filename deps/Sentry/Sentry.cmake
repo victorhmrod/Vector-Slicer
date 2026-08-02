@@ -22,8 +22,12 @@ if (WIN32)
     -DCMAKE_SHARED_LINKER_FLAGS:STRING=/DEBUG
   )
   if (MSVC)
-    # Reuse the top-level generator; a hardcoded VS version fails when the v143
-    # toolset is installed through a newer Visual Studio.
+    # Generator/toolset for the manual crashpad build in SENTRY_PATCH_COMMAND
+    # only. Reuse the top-level generator; a hardcoded VS version fails when
+    # the v143 toolset is installed through a newer Visual Studio. The Sentry
+    # ExternalProject itself already inherits generator/platform/toolset, so
+    # _sentry_cmake_generator must NOT go into its CMAKE_ARGS (a second -T
+    # would fail with "Multiple -T options not allowed").
     set(_sentry_cmake_generator -G "${CMAKE_GENERATOR}")
     if (CMAKE_GENERATOR_TOOLSET)
       list(APPEND _sentry_cmake_generator -T "${CMAKE_GENERATOR_TOOLSET}")
@@ -84,13 +88,21 @@ else()
   )
 endif()
 
+if (MSVC)
+  # The generator/platform/toolset are inherited from the top-level build; do
+  # not repeat them in CMAKE_ARGS (duplicate -T is a CMake error).
+  set(_sentry_ep_generator "")
+else ()
+  set(_sentry_ep_generator ${_sentry_cmake_generator})
+endif ()
+
 Snapmaker_Orca_add_cmake_project(Sentry
   GIT_REPOSITORY      https://github.com/getsentry/sentry-native.git
   GIT_TAG             0.12.2
   GIT_SHALLOW         ON
   PATCH_COMMAND       ${SENTRY_PATCH_COMMAND}
   CMAKE_ARGS
-    ${_sentry_cmake_generator}
+    ${_sentry_ep_generator}
     -DCMAKE_INSTALL_DATADIR:STRING=share
     ${_sentry_platform_flags}
 )

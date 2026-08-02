@@ -1,8 +1,14 @@
 cmake_minimum_required(VERSION 3.13)
 
-# Verify that your CMake version is exactly 3.31.x series or lower on windows
+# CMake 3.13.x - 3.31.x is the recommended range on Windows. CMake 4.x removed
+# compatibility with sub-3.5 minimums, which the vendored projects work around
+# via CMAKE_POLICY_VERSION_MINIMUM; require that instead of hard-failing so the
+# build also works on machines that only ship CMake 4.x.
 if ( ((MSVC) OR (WIN32)) AND (${CMAKE_VERSION} VERSION_GREATER_EQUAL "4.0") )
-    message(FATAL_ERROR "Only cmake versions between 3.13.x and 3.31.x is supported on windows. Detected version: ${CMAKE_VERSION}")
+    if (NOT DEFINED ENV{CMAKE_POLICY_VERSION_MINIMUM})
+        message(FATAL_ERROR "CMake ${CMAKE_VERSION} detected. Use CMake 3.13.x-3.31.x, or set the environment variable CMAKE_POLICY_VERSION_MINIMUM=3.5 to build with CMake 4.x.")
+    endif()
+    message(WARNING "Building with CMake ${CMAKE_VERSION}; the supported range on Windows is 3.13.x-3.31.x (CMAKE_POLICY_VERSION_MINIMUM=$ENV{CMAKE_POLICY_VERSION_MINIMUM}).")
 endif()
 
 if (WIN32)
