@@ -22,7 +22,12 @@ if (WIN32)
     -DCMAKE_SHARED_LINKER_FLAGS:STRING=/DEBUG
   )
   if (MSVC)
-    set(_sentry_cmake_generator -G "Visual Studio 17 2022")
+    # Reuse the top-level generator; a hardcoded VS version fails when the v143
+    # toolset is installed through a newer Visual Studio.
+    set(_sentry_cmake_generator -G "${CMAKE_GENERATOR}")
+    if (CMAKE_GENERATOR_TOOLSET)
+      list(APPEND _sentry_cmake_generator -T "${CMAKE_GENERATOR_TOOLSET}")
+    endif()
   endif()
 elseif (APPLE)
   # macOS: build shared libs so we get libsentry.dylib

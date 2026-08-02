@@ -28,6 +28,13 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL Clang)
 endif ()
 
 set(DEP_MSVC_GEN "Visual Studio ${DEP_VS_VER}")
+# The toolset (e.g. v143) may be provided by a newer Visual Studio than the one
+# matching MSVC_VERSION. In that case the "Visual Studio ${DEP_VS_VER}" generator
+# has no installed instance, so reuse the generator the top-level build was
+# configured with.
+if (CMAKE_GENERATOR MATCHES "^Visual Studio" AND NOT CMAKE_GENERATOR MATCHES "^Visual Studio ${DEP_VS_VER}")
+    set(DEP_MSVC_GEN "${CMAKE_GENERATOR}")
+endif ()
 if ("${DEPS_ARCH}" STREQUAL "x86")
     set(DEP_PLATFORM "Win32")
 elseif ("${DEPS_ARCH}" STREQUAL "x64")
